@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>航空客运订票系统</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>航空客运订票系统</h1>
+
+        <div class="form-section">
+            <h2>从文件中读取航班信息</h2>
+            <input type="file" id="fileInput">
+            <button onclick="loadFlightsFromFile()">加载航班信息</button>
+        </div>
+
+        <div class="form-section">
+            <h2>查询航线</h2>
+            <label>
+                终点站名：<input type="text" id="queryDestination">
+            </label>
+            <button onclick="queryFlight()">查询航线</button>
+            <div id="queryResult" class="result"></div>
+        </div>
+
+        <div class="form-section">
+            <h2>承办订票业务</h2>
+            <label>
+                航班号：<input type="text" id="bookFlightNumber">
+            </label>
+            <label>
+                订票数额：<input type="number" id="bookTickets">
+            </label>
+            <button onclick="bookTickets()">承办订票</button>
+            <div id="bookingResult" class="result"></div>
+        </div>
+
+        <div class="form-section">
+            <h2>承办退票业务</h2>
+            <label>
+                航班号：<input type="text" id="cancelFlightNumber">
+            </label>
+            <label>
+                退票日期：<input type="date" id="cancelDate">
+            </label>
+            <button onclick="cancelTickets()">承办退票</button>
+            <div id="cancelResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        class Customer {
+            constructor(name, tickets) {
+                this.name = name;
+                this.tickets = tickets;
+            }
+        }
+
+        class WaitingCustomer {
+            constructor(name, tickets) {
+                this.name = name;
+                this.tickets = tickets;
+            }
+        }
+
+        class Flight {
+            constructor(destination, flightNumber, planeNumber, flightDays, capacity, remainingTickets) {
+                this.destination = destination;
+                this.flightNumber = flightNumber;
+                this.planeNumber = planeNumber;
+                this.flightDays = flightDays;
+                this.capacity = capacity;
+                this.remainingTickets = remainingTickets;
+                this.bookedCustomers = [];
+                this.waitingCustomers = [];
+            }
+        }
+
+        let flights = [];
+
+        function loadFlightsFromFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(event) {
+                const content = event.target.result;
+                parseFlightData(content);
+                alert('航班信息已加载');
+            };
+            
+            reader.readAsText(file);
+        }
+
+        function parseFlightData(data) {
+            const lines = data.split('\n');
+            let flight = null;
+            let currentSection = '';
+
+            lines.forEach(line => {
+                const [key, value] = line.split(':').map(s => s.trim());
+                switch(key) {
+                    case '航线':
+                        const [destination] = value.split('-');
+                        flight = new Flight(destination, '', '', '', 0, 0);
+                        break;
+                    case '航班号':
+                        flight.flightNumber = value;
+                        break;
+                    case '机型':
+                        flight.planeNumber = value;
+                        break;
+                    case '星期几':
+                        flight.flightDays = value;
+                        break;
+                    case '最大人员':
+                        flight.capacity = parseInt(value);
+                        break;
+                    case '余票量':
+                        flight.remainingTickets = parseInt(value);
+                        break;
+                    case '已订票客户':
+                        currentSection = 'booked';
+                        flight.bookedCustomers = [];
+                        break;
+                    case '候补':
+                        currentSection = 'waiting';
+                        flight.waitingCustomers = [];
+                        break;
+                    case '姓名':
+                        if (currentSection === 'booked') {
+                            flight.bookedCustomers.push(new Customer(value, 0));
+                        } else if (currentSection === 'waiting') {
+                            flight.waitingCustomers.push(new WaitingCustomer(value, 0));
+                        }
+                        break;
+                    case '订票量':
+                        flight.bookedCustomers[flight.bookedCustomers.length - 1].tickets = parseInt(value);
+                        break;
+                    case '所需票量':
+                        flight.waitingCustomers[flight.waitingCustomers.length - 1].tickets = parseInt(value);
+                        break;
+                    default:
+                        // 未执行处理，跳过
+                        break;
+                }
+            });
+
+            if (flight) {
+                flights.push(flight);
+            }
+        }
+
+        function queryFlight() {
+            const destination = document.getElementById('queryDestination').value;
+            let result = flights.filter(flight => flight.destination === destination);
+
+            let output = '<h3>查询结果</h3>';
+            if (result.length === 0) {
+                output += '<p>没有找到相关航线</p>';
+            } else {
+                result.forEach(flight => {
+                    output += `<p>航班号: ${flight.flightNumber}, 飞机号: ${flight.planeNumber}, 飞行周日: ${flight.flightDays}, 余票量: ${flight.remainingTickets}</p>`;
+                });
+            }
+            document.getElementById('queryResult').innerHTML = output;
+        }
+
+        function bookTickets() {
+            const flightNumber = document.getElementById('bookFlightNumber').value;
+            const bookTickets = parseInt(document.getElementById('bookTickets').value);
+
+            let flight = flights.find(flight => flight.flightNumber === flightNumber);
+
+            let output = '<h3>订票结果</h3>';
+            if (!flight) {
+                output += '<p>没有找到该航班</p>';
+            } else if (flight.remainingTickets >= bookTickets) {
+                flight.remainingTickets -= bookTickets;
+                output += `<p>成功订票${bookTickets}张, 余票量: ${flight.remainingTickets}</p>`;
+            } else {
+                output += '<p>余票不足，无法订票</p>';
+            }
+            document.getElementById('bookingResult').innerHTML = output;
+        }
+
+        function cancelTickets() {
+            const flightNumber = document.getElementById('cancelFlightNumber').value;
+            const cancelDate = document.getElementById('cancelDate').value;
+
+            let flight = flights.find(flight => flight.flightNumber === flightNumber);
+
+            let output = '<h3>退票结果</h3>';
+            if (!flight) {
+                output += '<p>没有找到该航班</p>';
+            } else {
+                // 处理退票逻辑，这里简化为增加余票
+                flight.remainingTickets += 1;
+                output += `<p>成功退票1张, 余票量: ${flight.remainingTickets}</p>`;
+            }
+            document.getElementById('cancelResult').innerHTML = output;
+        }
+    </script>
+</body>
+</html>
