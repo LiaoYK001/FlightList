@@ -4,48 +4,98 @@
     <meta charset="UTF-8">
     <title>航空客运订票系统</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .container {
+            display: flex;
+            justify-content: space-between;
+        }
+        .form-container {
+            flex: 1;
+            padding: 10px;
+        }
+        .table-container {
+            flex: 1;
+            padding: 10px;
+        }
+        .form-section {
+            margin-bottom: 20px;
+        }
+        .result {
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1>航空客运订票系统</h1>
+        <div class="form-container">
+            <h1>航空客运订票系统</h1>
 
-        <div class="form-section">
-            <h2>从文件中读取航班信息</h2>
-            <input type="file" id="fileInput">
-            <button onclick="loadFlightsFromFile()">加载航班信息</button>
+            <div class="form-section">
+                <h2>从文件中读取航班信息</h2>
+                <input type="file" id="fileInput">
+                <button onclick="loadFlightsFromFile()">加载航班信息</button>
+            </div>
+
+            <div class="form-section">
+                <h2>查询航线</h2>
+                <label>
+                    终点站：<input type="text" id="queryDestination">
+                </label>
+                <button onclick="queryFlight()">查询航线</button>
+                <div id="queryResult" class="result"></div>
+            </div>
+
+            <div class="form-section">
+                <h2>承办订票业务</h2>
+                <label>
+                    航班号：<input type="text" id="bookFlightNumber">
+                </label>
+                <label>
+                    订票数额：<input type="number" id="bookTickets">
+                </label>
+                <button onclick="bookTickets()">承办订票</button>
+                <div id="bookingResult" class="result"></div>
+            </div>
+
+            <div class="form-section">
+                <h2>承办退票业务</h2>
+                <label>
+                    航班号：<input type="text" id="cancelFlightNumber">
+                </label>
+                <label>
+                    退票日期：<input type="date" id="cancelDate">
+                </label>
+                <button onclick="cancelTickets()">承办退票</button>
+                <div id="cancelResult" class="result"></div>
+            </div>
+
+            <div class="form-section">
+                <h2>手工录入航班信息</h2>
+                <label>
+                    终点站：<input type="text" id="manualDestination">
+                </label>
+                <label>
+                    航班号：<input type="text" id="manualFlightNumber">
+                </label>
+                <label>
+                    机型：<input type="text" id="manualPlaneNumber">
+                </label>
+                <label>
+                    星期几：<input type="text" id="manualFlightDays">
+                </label>
+                <label>
+                    最大人员：<input type="number" id="manualCapacity">
+                </label>
+                <label>
+                    余票量：<input type="number" id="manualRemainingTickets">
+                </label>
+                <button onclick="addManualFlight()">添加航班</button>
+                <div id="manualInputResult" class="result"></div>
+            </div>
         </div>
 
-        <div class="form-section">
-            <h2>查询航线</h2>
-            <label>
-                终点站名：<input type="text" id="queryDestination">
-            </label>
-            <button onclick="queryFlight()">查询航线</button>
-            <div id="queryResult" class="result"></div>
-        </div>
-
-        <div class="form-section">
-            <h2>承办订票业务</h2>
-            <label>
-                航班号：<input type="text" id="bookFlightNumber">
-            </label>
-            <label>
-                订票数额：<input type="number" id="bookTickets">
-            </label>
-            <button onclick="bookTickets()">承办订票</button>
-            <div id="bookingResult" class="result"></div>
-        </div>
-
-        <div class="form-section">
-            <h2>承办退票业务</h2>
-            <label>
-                航班号：<input type="text" id="cancelFlightNumber">
-            </label>
-            <label>
-                退票日期：<input type="date" id="cancelDate">
-            </label>
-            <button onclick="cancelTickets()">承办退票</button>
-            <div id="cancelResult" class="result"></div>
+        <div class="table-container">
+            <div id="flightsTableContainer" class="result"></div>
         </div>
     </div>
 
@@ -87,6 +137,7 @@
             reader.onload = function(event) {
                 const content = event.target.result;
                 parseFlightData(content);
+                displayFlightsTable();
                 alert('航班信息已加载');
             };
             
@@ -104,6 +155,7 @@
                     case '航线':
                         const [destination] = value.split('-');
                         flight = new Flight(destination, '', '', '', 0, 0);
+                        flights.push(flight);
                         break;
                     case '航班号':
                         flight.flightNumber = value;
@@ -142,14 +194,29 @@
                         flight.waitingCustomers[flight.waitingCustomers.length - 1].tickets = parseInt(value);
                         break;
                     default:
-                        // 未执行处理，跳过
+                        // 未执行处理，跳
                         break;
                 }
             });
+        }
 
-            if (flight) {
-                flights.push(flight);
-            }
+        function displayFlightsTable() {
+            const container = document.getElementById('flightsTableContainer');
+            let tableHTML = '<h3>航班信息</h3><table border="1"><tr><th>终点</th><th>航班号</th><th>机型</th><th>星期</th><th>最大人员</th><th>余票量</th></tr>';
+            
+            flights.forEach(flight => {
+                tableHTML += `<tr>
+                    <td>${flight.destination}</td>
+                    <td>${flight.flightNumber}</td>
+                    <td>${flight.planeNumber}</td>
+                    <td>${flight.flightDays}</td>
+                    <td>${flight.capacity}</td>
+                    <td>${flight.remainingTickets}</td>
+                </tr>`;
+            });
+            
+            tableHTML += '</table>';
+            container.innerHTML = tableHTML;
         }
 
         function queryFlight() {
@@ -161,7 +228,7 @@
                 output += '<p>没有找到相关航线</p>';
             } else {
                 result.forEach(flight => {
-                    output += `<p>航班号: ${flight.flightNumber}, 飞机号: ${flight.planeNumber}, 飞行周日: ${flight.flightDays}, 余票量: ${flight.remainingTickets}</p>`;
+                    output += `<p>航班号: ${flight.flightNumber}, 机型: ${flight.planeNumber}, 星期: ${flight.flightDays}, 余票量: ${flight.remainingTickets}</p>`;
                 });
             }
             document.getElementById('queryResult').innerHTML = output;
@@ -179,6 +246,7 @@
             } else if (flight.remainingTickets >= bookTickets) {
                 flight.remainingTickets -= bookTickets;
                 output += `<p>成功订票${bookTickets}张, 余票量: ${flight.remainingTickets}</p>`;
+                displayFlightsTable(); // 更新
             } else {
                 output += '<p>余票不足，无法订票</p>';
             }
@@ -195,11 +263,32 @@
             if (!flight) {
                 output += '<p>没有找到该航班</p>';
             } else {
-                // 处理退票逻辑，这里简化为增加余票
-                flight.remainingTickets += 1;
-                output += `<p>成功退票1张, 余票量: ${flight.remainingTickets}</p>`;
+                flight.remainingTickets += 1; // 简单示例，假设退票数为1
+                output += `<p>成功退票, 余票量: ${flight.remainingTickets}</p>`;
+                displayFlightsTable(); // 更新
             }
             document.getElementById('cancelResult').innerHTML = output;
+        }
+
+        function addManualFlight() {
+            const destination = document.getElementById('manualDestination').value;
+            const flightNumber = document.getElementById('manualFlightNumber').value;
+            const planeNumber = document.getElementById('manualPlaneNumber').value;
+            const flightDays = document.getElementById('manualFlightDays').value;
+            const capacity = parseInt(document.getElementById('manualCapacity').value);
+            const remainingTickets = parseInt(document.getElementById('manualRemainingTickets').value);
+
+            if (!destination || !flightNumber || !planeNumber || !flightDays || isNaN(capacity) || isNaN(remainingTickets)) {
+                document.getElementById('manualInputResult').innerHTML = '<p>所有字段都是必填的，并且最大人员和余票量应为数字</p>';
+                return;
+            }
+
+            const newFlight = new Flight(destination, flightNumber, planeNumber, flightDays, capacity, remainingTickets);
+            flights.push(newFlight);
+
+            displayFlightsTable(); // 更新航班信息表格
+
+            document.getElementById('manualInputResult').innerHTML = '<p>航班信息已成功添加</p>';
         }
     </script>
 </body>

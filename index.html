@@ -6,9 +6,34 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    
     <div class="container">
         <h1>航空客运订票系统</h1>
-
+        
+        <div class="form-section">
+            <h2>手工录入航班信息</h2>
+            <label>
+                终点站：<input type="text" id="manualDestination">
+            </label>
+            <label>
+                航班号：<input type="text" id="manualFlightNumber">
+            </label>
+            <label>
+                机型：<input type="text" id="manualPlaneNumber">
+            </label>
+            <label>
+                星期几：<input type="text" id="manualFlightDays">
+            </label>
+            <label>
+                最大人员：<input type="number" id="manualCapacity">
+            </label>
+            <label>
+                余票量：<input type="number" id="manualRemainingTickets">
+            </label>
+            <button onclick="addManualFlight()">添加航班</button>
+            <div id="manualInputResult" class="result"></div>
+        </div>
+        
         <div class="form-section">
             <h2>从文件中读取航班信息</h2>
             <input type="file" id="fileInput">
@@ -96,6 +121,28 @@
             reader.readAsText(file);
         }
 
+        function addManualFlight() {
+    const destination = document.getElementById('manualDestination').value;
+    const flightNumber = document.getElementById('manualFlightNumber').value;
+    const planeNumber = document.getElementById('manualPlaneNumber').value;
+    const flightDays = document.getElementById('manualFlightDays').value;
+    const capacity = parseInt(document.getElementById('manualCapacity').value);
+    const remainingTickets = parseInt(document.getElementById('manualRemainingTickets').value);
+
+    if (!destination || !flightNumber || !planeNumber || !flightDays || isNaN(capacity) || isNaN(remainingTickets)) {
+        document.getElementById('manualInputResult').innerHTML = '<p>所有字段都是必填的，并且最大人员和余票量应为数字</p>';
+        return;
+    }
+
+    const newFlight = new Flight(destination, flightNumber, planeNumber, flightDays, capacity, remainingTickets);
+    flights.push(newFlight);
+
+    displayFlightsTable(); // 更新
+
+    document.getElementById('manualInputResult').innerHTML = '<p>航班信息已成功添加</p>';
+}
+
+
         function parseFlightData(data) {
             const lines = data.split('\n');
             let flight = null;
@@ -146,7 +193,7 @@
                         flight.waitingCustomers[flight.waitingCustomers.length - 1].tickets = parseInt(value);
                         break;
                     default:
-                        // 未执行处理，跳过
+                        // 未执行处理，跳
                         break;
                 }
             });
@@ -154,7 +201,7 @@
 
         function displayFlightsTable() {
             const container = document.getElementById('flightsTableContainer');
-            let tableHTML = '<h3>航班信息</h3><table border="1"><tr><th>航线</th><th>航班号</th><th>机型</th><th>星期</th><th>最大人员</th><th>余票量</th></tr>';
+            let tableHTML = '<h3>航班信息</h3><table border="1"><tr><th>终点</th><th>航班号</th><th>机型</th><th>星期</th><th>最大人员</th><th>余票量</th></tr>';
             
             flights.forEach(flight => {
                 tableHTML += `<tr>
@@ -198,7 +245,7 @@
             } else if (flight.remainingTickets >= bookTickets) {
                 flight.remainingTickets -= bookTickets;
                 output += `<p>成功订票${bookTickets}张, 余票量: ${flight.remainingTickets}</p>`;
-                displayFlightsTable(); // 更新表格
+                displayFlightsTable(); // 更新
             } else {
                 output += '<p>余票不足，无法订票</p>';
             }
@@ -215,7 +262,7 @@
             if (!flight) {
                 output += '<p>没有找到该航班</p>';
             } else {
-                // 处理退票逻辑，这里简化为增加余票
+                // 处理退票，增加余票
                 flight.remainingTickets += 1;
                 output += `<p>成功退票1张, 余票量: ${flight.remainingTickets}</p>`;
                 displayFlightsTable(); // 更新表格
