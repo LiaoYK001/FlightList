@@ -129,7 +129,7 @@
 
         let flights = [];
 
-        function loadFlightsFromFile() {
+        function loadFlightsFromFile() {    //从文件录入！
             const fileInput = document.getElementById('fileInput');
             const file = fileInput.files[0];
             const reader = new FileReader();
@@ -144,7 +144,7 @@
             reader.readAsText(file);
         }
 
-        function parseFlightData(data) {
+        function parseFlightData(data) {  //读取的函数
             const lines = data.split('\n');
             let flight = null;
             let currentSection = '';
