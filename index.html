@@ -68,7 +68,7 @@
                     航班号：<input type="text" id="cancelFlightNumber">
                 </label>
                 <label>
-                    姓名：<input type="text" id="customerName">
+                    姓名：<input type="text" id="customerNameDel">
                 </label>
                 <label>
                     退票日期：<input type="date" id="cancelDate">
@@ -449,9 +449,14 @@
         function bookTickets() {
              const flightNumber = document.getElementById('bookFlightNumber').value;
              const bookTickets = parseInt(document.getElementById('bookTickets').value);
-             const customerName = parseInt(document.getElementById('customerName').value);
+             const customerName = document.getElementById('customerName').value;
+             console.log('Customer Name:', customerName); // 调试信息
              //const customerName = prompt('请输入客户姓名');
-
+             if(bookTickets<1||bookTickets>999999){
+                let output = '<h3>错误的数字！！！</h3>';
+                document.getElementById('bookingResult').innerHTML = output;
+                return;
+             }
              let flight = flights.find(flight => flight.flightNumber === flightNumber);
 
              let output = '<h3>订票结果</h3>';
@@ -468,14 +473,15 @@
                 displayFlightsTable(); // 更新
             }
             document.getElementById('bookingResult').innerHTML = output;
-}
+        }
 
         
         function cancelTickets() {
             const flightNumber = document.getElementById('cancelFlightNumber').value;
-            const customerName = parseInt(document.getElementById('customerName').value);
+            const customerName = document.getElementById('customerNameDel').value;
             //const customerName = prompt('请输入客户姓名');
-
+            console.log('Customer Name:', customerName); // 调试信息
+            
             let flight = flights.find(flight => flight.flightNumber === flightNumber);
 
             let output = '<h3>退票结果</h3>';

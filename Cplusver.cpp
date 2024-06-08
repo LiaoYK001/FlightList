@@ -132,7 +132,9 @@ void bookTickets() {
     printf("输入航班号和订票数量: ");
     scanf("%s", flightNumber);
     scanf("%d", &tickets);
-
+    if(tickets<1||tickets>999999){
+        printf("你想干什么？请输入正确的数字\n");
+    }
     FlightInfo* targetFlight = NULL;
     for (int i = 0; i < flightCount; i++) {
         if (strcmp(flights[i].flightNumber, flightNumber) == 0) {
@@ -261,7 +263,9 @@ void cancelTickets() {
     scanf("%s", flightNumber);
     scanf("%s", customerName);
     scanf("%d", &tickets);
-
+    if(tickets<1||tickets>999999){
+        printf("你想干什么？请输入正确的数字\n");
+    }
     for (int i = 0; i < flightCount; i++) {
         if (strcmp(flights[i].flightNumber, flightNumber) == 0) {
             PassengerNode** p = &flights[i].passengerListHead;
