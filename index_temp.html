@@ -25,7 +25,7 @@
         }
     </style>
 </head>
-<body>
+<body onload="loadDefaultData()">
     <div class="container">
         <div class="form-container">
             <h1>航空客运订票系统</h1>
@@ -114,120 +114,190 @@
             }
         }
 
-        class Flight {
-        constructor(destination, flightNumber, planeNumber, flightDays, capacity, remainingTickets) {
-        this.destination = destination;
-        this.flightNumber = flightNumber;
-        this.planeNumber = planeNumber;
-        this.flightDays = flightDays;
-        this.capacity = capacity;
-        this.remainingTickets = remainingTickets;
-        this.bookedCustomers = new LinkedList();
-        this.waitingCustomers = new Queue();
-    }
-}
-
         class ListNode {
-    constructor(customer) {
-        this.customer = customer;
-        this.next = null;
-    }
-}
-
-class LinkedList {
-    constructor() {
-        this.head = null;
-    }
-
-    insert(customer) {
-        const newNode = new ListNode(customer);
-        if (!this.head || this.head.customer.name.localeCompare(customer.name) > 0) {
-            newNode.next = this.head;
-            this.head = newNode;
-        } else {
-            let current = this.head;
-            while (current.next && current.next.customer.name.localeCompare(customer.name) < 0) {
-                current = current.next;
+            constructor(customer, next = null) {
+                this.customer = customer;
+                this.next = next;
             }
-            newNode.next = current.next;
-            current.next = newNode;
-        }
-    }
-
-    delete(name) {
-        if (!this.head) return null;
-
-        if (this.head.customer.name === name) {
-            const deletedNode = this.head;
-            this.head = this.head.next;
-            return deletedNode.customer;
         }
 
-        let current = this.head;
-        while (current.next && current.next.customer.name !== name) {
-            current = current.next;
-        }
-
-        if (current.next) {
-            const deletedNode = current.next;
-            current.next = current.next.next;
-            return deletedNode.customer;
-        }
-
-        return null;
-    }
-
-    find(name) {
-        let current = this.head;
-        while (current) {
-            if (current.customer.name === name) {
-                return current.customer;
+        class LinkedList {
+            constructor() {
+                this.head = null;
             }
-            current = current.next;
+
+            find(name) {
+                let current = this.head;
+                while (current !== null) {
+                    if (current.customer.name === name) {
+                        return current.customer;
+                    }
+                    current = current.next;
+                }
+                return null;
+            }
+
+            insert(customer) {
+                if (this.head === null || this.head.customer.name > customer.name) {
+                    this.head = new ListNode(customer, this.head);
+                } else {
+                    let current = this.head;
+                    while (current.next !== null && current.next.customer.name < customer.name) {
+                        current = current.next;
+                    }
+                    current.next = new ListNode(customer, current.next);
+                }
+            }
+
+            delete(name) {
+                if (this.head === null) {
+                    return null;
+                }
+                if (this.head.customer.name === name) {
+                    const customer = this.head.customer;
+                    this.head = this.head.next;
+                    return customer;
+                }
+                let current = this.head;
+                while (current.next !== null && current.next.customer.name !== name) {
+                    current = current.next;
+                }
+                if (current.next === null) {
+                    return null;
+                }
+                const customer = current.next.customer;
+                current.next = current.next.next;
+                return customer;
+            }
         }
-        return null;
-    }
-}
 
-class QueueNode {
-    constructor(customer) {
-        this.customer = customer;
-        this.next = null;
-    }
-}
-
-class Queue {
-    constructor() {
-        this.front = null;
-        this.rear = null;
-    }
-
-    enqueue(customer) {//入队
-        const newNode = new QueueNode(customer);
-        if (this.rear) {
-            this.rear.next = newNode;
-        } else {
-            this.front = newNode;
+        class QueueNode {
+            constructor(customer, next = null) {
+                this.customer = customer;
+                this.next = next;
+            }
         }
-        this.rear = newNode;
-    }
 
-    dequeue() {//出队
-        if (!this.front) return null;
-        const dequeuedNode = this.front;
-        this.front = this.front.next;
-        if (!this.front) {
-            this.rear = null;
+        class Queue {
+            constructor() {
+                this.front = null;
+                this.rear = null;
+            }
+
+            enqueue(customer) {
+                const node = new QueueNode(customer);
+                if (this.rear === null) {
+                    this.front = this.rear = node;
+                } else {
+                    this.rear.next = node;
+                    this.rear = node;
+                }
+            }
+
+            dequeue() {
+                if (this.front === null) {
+                    return null;
+                }
+                const customer = this.front.customer;
+                this.front = this.front.next;
+                if (this.front === null) {
+                    this.rear = null;
+                }
+                return customer;
+            }
+
+            isEmpty() {
+                return this.front === null;
+            }
         }
-        return dequeuedNode.customer;
-    }
 
-    isEmpty() {//判空
-        return !this.front;
-    }
-}
+        class Flight {
+            constructor(destination, flightNumber, planeNumber, flightDays, capacity, remainingTickets) {
+                this.destination = destination;
+                this.flightNumber = flightNumber;
+                this.planeNumber = planeNumber;
+                this.flightDays = flightDays;
+                this.capacity = capacity;
+                this.remainingTickets = remainingTickets;
+                this.bookedCustomers = new LinkedList();
+                this.waitingCustomers = new Queue();
+            }
+        }
 
         let flights = [];
+        
+        function loadDefaultData() {
+            const data = `
+航线:广州
+航班号:CZ456
+机型:A320
+星期几:2 4 6
+最大人员:120
+余票量:80
+已订票客户:2
+姓名:Alen
+订票量:1
+姓名:Jack
+订票量:3
+候补:1
+姓名:Yu
+所需票量:1
+
+航线:北京
+航班号:G673
+机型:A350
+星期几:4 6
+最大人员:200
+余票量:140
+已订票客户:1
+姓名:Alen
+订票量:1
+候补:1
+姓名:Yu
+所需票量:4
+
+航线:北京
+航班号:G600
+机型:A350
+星期几:1 4 6 7
+最大人员:200
+余票量:100
+已订票客户:3
+姓名:Alen
+订票量:1
+姓名:Lao
+订票量:1
+姓名:Tim
+订票量:3
+候补:1
+姓名:Yuo
+所需票量:4
+
+航线:成都
+航班号:MU3423
+机型:787
+星期几:2 3 4 6
+最大人员:140
+余票量:100
+已订票客户:0
+候补:0
+
+航线:火星
+航班号:马斯克特派
+机型:Falcon9
+星期几:2 3 4 6
+最大人员:99
+余票量:8
+已订票客户:2
+姓名:老王
+订票量:1
+姓名:老登
+订票量:1
+候补:0
+            `;
+            parseFlightData(data);
+            displayFlightsTable();
+        }
 
         function loadFlightsFromFile() {    //从文件录入！
             const fileInput = document.getElementById('fileInput');
@@ -274,65 +344,82 @@ class Queue {
                         break;
                     case '已订票客户':
                         currentSection = 'booked';
-                        flight.bookedCustomers = [];
+                        flight.bookedCustomers = new LinkedList();
                         break;
                     case '候补':
                         currentSection = 'waiting';
-                        flight.waitingCustomers = [];
+                        flight.waitingCustomers = new Queue();
                         break;
                     case '姓名':
                         if (currentSection === 'booked') {
-                            flight.bookedCustomers.push(new Customer(value, 0));
+                            let currentCustomer = new Customer(value, 0);
+                            flight.bookedCustomers.insert(currentCustomer);
                         } else if (currentSection === 'waiting') {
-                            flight.waitingCustomers.push(new WaitingCustomer(value, 0));
+                            let currentCustomer = new WaitingCustomer(value, 0);
+                            flight.waitingCustomers.enqueue(currentCustomer);
                         }
                         break;
                     case '订票量':
-                        flight.bookedCustomers[flight.bookedCustomers.length - 1].tickets = parseInt(value);
+                        let bookedCurrent = flight.bookedCustomers.head;
+                        while (bookedCurrent !== null) {
+                            if (bookedCurrent.customer.tickets === 0) {
+                                bookedCurrent.customer.tickets = parseInt(value);
+                                break;
+                            }
+                            bookedCurrent = bookedCurrent.next;
+                        }
                         break;
                     case '所需票量':
-                        flight.waitingCustomers[flight.waitingCustomers.length - 1].tickets = parseInt(value);
+                        let waitingCurrent = flight.waitingCustomers.front;
+                        while (waitingCurrent !== null) {
+                            if (waitingCurrent.customer.tickets === 0) {
+                                waitingCurrent.customer.tickets = parseInt(value);
+                                break;
+                            }
+                            waitingCurrent = waitingCurrent.next;
+                        }
                         break;
                     default:
-                        // 未执行处理，跳
+                        // 未执行，跳！
                         break;
                 }
             });
         }
 
         function displayFlightsTable() {
-    const container = document.getElementById('flightsTableContainer');
-    let tableHTML = '<h3>航班信息</h3><table border="1"><tr><th>终点</th><th>航班号</th><th>机型</th><th>星期</th><th>最大人员</th><th>余票量</th></tr>';
-    
-    flights.forEach(flight => {
-        tableHTML += `<tr>
-            <td>${flight.destination}</td>
-            <td>${flight.flightNumber}</td>
-            <td>${flight.planeNumber}</td>
-            <td>${flight.flightDays}</td>
-            <td>${flight.capacity}</td>
-            <td>${flight.remainingTickets}</td>
-        </tr>`;
-        tableHTML += '<tr><td colspan="6"><strong>已订票客户:</strong><ul>';
-        let current = flight.bookedCustomers.head;
-        while (current) {
-            tableHTML += `<li>${current.customer.name} (${current.customer.tickets}张)</li>`;
-            current = current.next;
-        }
-        tableHTML += '</ul></td></tr>';
-        tableHTML += '<tr><td colspan="6"><strong>候补客户:</strong><ul>';
-        current = flight.waitingCustomers.front;
-        while (current) {
-            tableHTML += `<li>${current.customer.name} (${current.customer.tickets}张)</li>`;
-            current = current.next;
-        }
-        tableHTML += '</ul></td></tr>';
-    });
-    
-    tableHTML += '</table>';
-    container.innerHTML = tableHTML;
-}
+            const container = document.getElementById('flightsTableContainer');
+            let tableHTML = '<h3>航班信息</h3><table border="1"><tr><th>终点</th><th>航班号</th><th>机型</th><th>星期</th><th>最大人员</th><th>余票量</th><th>已订票客户</th><th>候补客户</th></tr>';
 
+            flights.forEach(flight => {
+                let bookedCustomersHTML = '';
+                let current = flight.bookedCustomers.head;
+                while (current !== null) {
+                    bookedCustomersHTML += `${current.customer.name} (${current.customer.tickets}张)<br>`;
+                    current = current.next;
+                }
+
+                let waitingCustomersHTML = '';
+                let waitingCurrent = flight.waitingCustomers.front;
+                while (waitingCurrent !== null) {
+                    waitingCustomersHTML += `${waitingCurrent.customer.name} (${waitingCurrent.customer.tickets}张)<br>`;
+                    waitingCurrent = waitingCurrent.next;
+                }
+
+                tableHTML += `<tr>
+                    <td>${flight.destination}</td>
+                    <td>${flight.flightNumber}</td>
+                    <td>${flight.planeNumber}</td>
+                    <td>${flight.flightDays}</td>
+                    <td>${flight.capacity}</td>
+                    <td>${flight.remainingTickets}</td>
+                    <td>${bookedCustomersHTML}</td>
+                    <td>${waitingCustomersHTML}</td>
+                </tr>`;
+            });
+
+            tableHTML += '</table>';
+            container.innerHTML = tableHTML;
+        }
 
         function queryFlight() {
             const destination = document.getElementById('queryDestination').value;
@@ -349,79 +436,55 @@ class Queue {
             document.getElementById('queryResult').innerHTML = output;
         }
 
-    function bookTickets() {
-    const flightNumber = document.getElementById('bookFlightNumber').value;
-    const bookTickets = parseInt(document.getElementById('bookTickets').value);
-    const customerName = prompt('请输入客户姓名');
+        function bookTickets() {
+            const flightNumber = document.getElementById('bookFlightNumber').value;
+            const bookTickets = parseInt(document.getElementById('bookTickets').value);
 
-    let flight = flights.find(flight => flight.flightNumber === flightNumber);
+            let flight = flights.find(flight => flight.flightNumber === flightNumber);
 
-    let output = '<h3>订票结果</h3>';
-    if (!flight) {
-        output += '<p>没有找到该航班</p>';
-    } else if (flight.remainingTickets >= bookTickets) {
-        flight.remainingTickets -= bookTickets;
-        flight.bookedCustomers.insert(new Customer(customerName, bookTickets));
-        output += `<p>成功订票${bookTickets}张, 余票量: ${flight.remainingTickets}</p>`;
-        displayFlightsTable(); // 更新
-    } else {
-        flight.waitingCustomers.enqueue(new WaitingCustomer(customerName, bookTickets));
-        output += '<p>余票不足，客户已加入候补名单</p>';
-    }
-    document.getElementById('bookingResult').innerHTML = output;
-}
-
-
-function cancelTickets() {
-    const flightNumber = document.getElementById('cancelFlightNumber').value;
-    const customerName = prompt('请输入客户姓名');
-
-    let flight = flights.find(flight => flight.flightNumber === flightNumber);
-
-    let output = '<h3>退票结果</h3>';
-    if (!flight) {
-        output += '<p>没有找到该航班</p>';
-    } else {
-        const customer = flight.bookedCustomers.delete(customerName);
-        if (customer) {
-            flight.remainingTickets += customer.tickets;
-            output += `<p>成功退票${customer.tickets}张, 余票量: ${flight.remainingTickets}</p>`;
-            while (!flight.waitingCustomers.isEmpty() && flight.remainingTickets >= flight.waitingCustomers.front.customer.tickets) {
-                const waitingCustomer = flight.waitingCustomers.dequeue();
-                flight.remainingTickets -= waitingCustomer.tickets;
-                flight.bookedCustomers.insert(new Customer(waitingCustomer.name, waitingCustomer.tickets));
-                output += `<p>${waitingCustomer.name} 已从候补名单中订票${waitingCustomer.tickets}张, 余票量: ${flight.remainingTickets}</p>`;
+            let output = '<h3>订票结果</h3>';
+            if (!flight) {
+                output += '<p>没有找到该航班</p>';
+            } else if (flight.remainingTickets >= bookTickets) {
+                flight.remainingTickets -= bookTickets;
+                output += `<p>成功订票${bookTickets}张, 余票量: ${flight.remainingTickets}</p>`;
+                displayFlightsTable(); // 更新
+            } else {
+                output += '<p>余票不足，无法订票</p>';
             }
-            displayFlightsTable(); // 更新
-        } else {
-            output += '<p>没有找到该客户的订票记录</p>';
+            document.getElementById('bookingResult').innerHTML = output;
         }
-    }
-    document.getElementById('cancelResult').innerHTML = output;
-}
 
+        function cancelTickets() {
+            const flightNumber = document.getElementById('cancelFlightNumber').value;
+
+            let flight = flights.find(flight => flight.flightNumber === flightNumber);
+
+            let output = '<h3>退票结果</h3>';
+            if (!flight) {
+                output += '<p>没有找到该航班</p>';
+            } else {
+                flight.remainingTickets += 1;
+                output += `<p>成功退票1张, 余票量: ${flight.remainingTickets}</p>`;
+                displayFlightsTable(); // 更新
+            }
+            document.getElementById('cancelResult').innerHTML = output;
+        }
 
         function addManualFlight() {
-    const destination = document.getElementById('manualDestination').value;
-    const flightNumber = document.getElementById('manualFlightNumber').value;
-    const planeNumber = document.getElementById('manualPlaneNumber').value;
-    const flightDays = document.getElementById('manualFlightDays').value;
-    const capacity = parseInt(document.getElementById('manualCapacity').value);
-    const remainingTickets = parseInt(document.getElementById('manualRemainingTickets').value);
+            const destination = document.getElementById('manualDestination').value;
+            const flightNumber = document.getElementById('manualFlightNumber').value;
+            const planeNumber = document.getElementById('manualPlaneNumber').value;
+            const flightDays = document.getElementById('manualFlightDays').value;
+            const capacity = parseInt(document.getElementById('manualCapacity').value);
+            const remainingTickets = parseInt(document.getElementById('manualRemainingTickets').value);
 
-    if (!destination || !flightNumber || !planeNumber || !flightDays || isNaN(capacity) || isNaN(remainingTickets)) {
-        document.getElementById('manualInputResult').innerHTML = '<p>所有字段都是必填，并且最大人数和余票量应为数字</p>';
-        return;
-    }
+            const newFlight = new Flight(destination, flightNumber, planeNumber, flightDays, capacity, remainingTickets);
+            flights.push(newFlight);
+            displayFlightsTable();
 
-    const newFlight = new Flight(destination, flightNumber, planeNumber, flightDays, capacity, remainingTickets);
-    flights.push(newFlight);
-
-    displayFlightsTable(); // 更新
-
-    document.getElementById('manualInputResult').innerHTML = '<p>航班信息已成功添加</p>';
-}
-
+            document.getElementById('manualInputResult').innerHTML = '<p>成功添加航班</p>';
+        }
     </script>
 </body>
 </html>
