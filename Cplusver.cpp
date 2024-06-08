@@ -1,207 +1,436 @@
+#define  _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "math.h"
 
-
+// èˆªçº¿
 typedef struct FlightInfo {
-    char destination[100];    // ÖÕµãÕ¾
-    char flightNumber[20];    // º½°àºÅ
-    char planeNumber[20];     // »úĞÍ
-    int flightDay;            // ĞÇÆÚ¼¸ÄØ£¿
-    int seatQuota;            // ×î´ó³ÉÔ±×é
-    int remainingTickets;     // ÓàÆ±Á¿
-    struct PassengerNode* passengerListHead; // ³Ë¿ÍÃûµ¥
-    struct WaitListNode* waitListHead;       // µÈºòÃûµ¥Í·
-    struct WaitListNode* waitListTail;       // µÈºòÃûµ¥Î²
+    char destination[100];    // ç»ˆç‚¹ç«™
+    char flightNumber[20];    // èˆªç­å·
+    char planeNumber[20];     // æœºå‹
+    int flightDays[7];        // æ˜ŸæœŸå‡ ï¼Œ0: å‘¨æ—¥, 6: å‘¨å…­
+    int seatQuota;            // æœ€å¤§äººæ•°
+    int remainingTickets;     // ä½™ç¥¨
+    struct PassengerNode* passengerListHead; // ä¹˜å®¢åå•
+    struct WaitListNode* waitListHead;       // ç­‰å€™åå•å¤´
+    struct WaitListNode* waitListTail;       // ç­‰å€™åå•å°¾
 } FlightInfo;
 
-// ³Ë¿ÍĞÅÏ¢½á¹¹Ìå
+// ä¹˜å®¢
 typedef struct PassengerNode {
     char name[100];
-    int ticketCount;
-    int cabinClass;
+    int ticketCount;//ä¸€ä¸ªpersonæœ‰å¤šå°‘ç¥¨ï¼Ÿæ¯”å¦‚è€ç‹è¦3å¼ ticketCount==3ï¼›
     struct PassengerNode* next;
 } PassengerNode;
+
 typedef struct WaitListNode {
     char name[100];
-    int requiredTickets;
+    int requiredTickets;//ä¸€ä¸ªpersonæœ‰å¤šå°‘ç¥¨ï¼ˆå€™è¡¥ï¼‰
     struct WaitListNode* next;
 } WaitListNode;
 
-// 1. Â¼Èëº½°àĞÅÏ¢
-//
-//ÎÒÃÇĞèÒªÒ»¸öº¯ÊıÀ´ÊÖ¶¯Â¼Èëº½°àĞÅÏ¢£¬
-
-// ¶¨ÒåÈ«¾Öº½°àÊı×éºÍº½°àÊıÁ¿
-#define MAX_FLIGHTS 100
-FlightInfo flights[MAX_FLIGHTS];
-int flightCount = 0;
+#define MAX_FLIGHTS 999999;
+FlightInfo flights[999999];//max=999999
+int flightCount = 0;//å…ˆå½’é›¶
 
 void enterFlightInfo() {
-    if (flightCount >= MAX_FLIGHTS) {
-        printf("º½°à¼ÇÂ¼ÒÑÂú¡£\n");
-        return;
-    }
     FlightInfo* f = &flights[flightCount++];
-    printf("ÊäÈëÖÕµãÕ¾Ãû: ");
-    scanf_s("%s", f->destination);
-    printf("ÊäÈëº½°àºÅ: ");
-    scanf_s("%s", f->flightNumber);
-    printf("ÊäÈë·É»úºÅ: ");
-    scanf_s("%s", f->planeNumber);
-    printf("ÊäÈë·ÉĞĞÖÜÈÕ (1-7, ĞÇÆÚÌìÎª1): ");
-    scanf_s("%d", &f->flightDay);
-    printf("ÊäÈë³ËÔ±¶¨¶î: ");
-    scanf_s("%d", &f->seatQuota);
-    printf("ÊäÈëÓàÆ±Á¿: ");
-    scanf_s("%d", &f->remainingTickets);
+    printf("è¾“å…¥ç»ˆç‚¹ç«™å: ");
+    scanf("%s", f->destination);
+    printf("è¾“å…¥èˆªç­å·: ");
+    scanf("%s", f->flightNumber);
+    printf("è¾“å…¥é£æœºå·: ");
+    scanf("%s", f->planeNumber);
+    printf("è¾“å…¥é£è¡Œæ˜ŸæœŸï¼Ÿ (ç”¨ç©ºæ ¼åˆ†éš”, ä¾‹å¦‚ 2 4 6): ");
+    for (int i = 0; i < 7; ++i) f->flightDays[i] = 0;//åˆå§‹å‡è®¾7å¤©éƒ½æ²¡æœ‰
+    char days[20];
+    scanf("%s", days);//å­—ç¬¦ä¸²ç±»å‹
+    char* context = NULL;
+    for(int i=0;i<strlen(days);i++){
+        if(days[i]!=' '){
+            int cou=days[i]-'0';
+             if(cou>7||cou<1){
+                printf("é”™è¯¯çš„æ—¥æœŸè¾“å…¥ï¼");
+                exit(0);
+             }
+            f->flightDays[cou]=1;
+        }
+    }
+    
+    printf("è¾“å…¥æœ€å¤§äººæ•°: ");
+    scanf("%d", &f->seatQuota);
+    printf("è¾“å…¥ä½™ç¥¨é‡: ");
+    scanf("%d", &f->remainingTickets);
 
     f->passengerListHead = NULL;
     f->waitListHead = NULL;
     f->waitListTail = NULL;
 
-    printf("º½°àĞÅÏ¢Â¼Èë³É¹¦£¡\n");
+    printf("èˆªç­ä¿¡æ¯å½•å…¥æˆåŠŸï¼\n");
 }
-//2. ²éÑ¯º½Ïß
-//
-//Õâ¸öº¯Êı»á¸ù¾İÓÃ»§Ìá¹©µÄÖÕµãÕ¾ÃûÊä³öÏàÓ¦µÄº½°àĞÅÏ¢¡£
 
 void queryFlights() {
     char destination[100];
-    printf("ÊäÈë²éÑ¯µÄÖÕµãÕ¾Ãû: ");
-    scanf_s("%s", destination);
+    printf("è¾“å…¥æŸ¥è¯¢çš„ç»ˆç‚¹ç«™å: ");
+    scanf("%s", destination);
     int found = 0;
     for (int i = 0; i < flightCount; i++) {
-        if (strcmp(flights[i].destination, destination) == 0) {
-            printf("º½°àºÅ: %s, ·É»úºÅ: %s, ĞÇÆÚ¼¸·ÉĞĞ: %d, ÓàÆ±Á¿: %d\n",
-                flights[i].flightNumber, flights[i].planeNumber,
-                flights[i].flightDay, flights[i].remainingTickets);
+        if (strcmp(flights[i].destination, destination) == 0) { //å­—ç¬¦ä¸²æ¯”è¾ƒæ‰¾åˆ°ä¸€æ ·çš„ï¼string compare
+            printf("èˆªç­å·: %s, æœºå‹: %s, é£è¡Œæ˜ŸæœŸ: ", flights[i].flightNumber, flights[i].planeNumber);
+            for (int j = 0; j < 7; ++j) if (flights[i].flightDays[j]) printf("%d ", j + 1);
+            printf(", ä½™ç¥¨é‡: %d\n", flights[i].remainingTickets);
             found = 1;
         }
     }
     if (!found) {
-        printf("Ã»ÓĞÕÒµ½µ½´ï %s µÄº½°à¡£\n", destination);
+        printf("æ²¡æœ‰æ‰¾åˆ°åˆ°è¾¾ %s çš„èˆªç­ã€‚\n", destination);
     }
 }
-// 3. ´¦Àí¶©Æ±
-//
-//Õâ¸ö¹¦ÄÜ½«¸ù¾İº½°àºÅºÍ¶©Æ±ÊıÁ¿À´´¦Àí¶©Æ±ÇëÇó¡£
 
+void addPassenger(FlightInfo* flight, const char* name, int tickets) {
+    PassengerNode* newPassenger = (PassengerNode*)malloc(sizeof(PassengerNode));
+    strcpy(newPassenger->name, name);
+    newPassenger->ticketCount = tickets;
+    newPassenger->next = NULL;
+
+    if (flight->passengerListHead == NULL || strcmp(flight->passengerListHead->name, name) > 0) {  //ç¨‹åºä¸€å·é“¾è¡¨ï¼šå®¢æˆ·é“¾è¡¨æ“ä½œï¼Œä¸å¸¦å¤´node
+        newPassenger->next = flight->passengerListHead;
+        flight->passengerListHead = newPassenger;//å¤´ç»“ç‚¹ç§»åŠ¨
+    }
+    else {
+        PassengerNode* p = flight->passengerListHead;//æ­¤æ—¶ç”±äºè¦æŒ‰ç…§nameæ’åºï¼Œæ‰¾é“¾è¡¨ä¸­åˆé€‚çš„åœ°å„¿æ’å…¥ï¼
+        while (p->next != NULL && strcmp(p->next->name, name) < 0) {
+            p = p->next;
+        }
+        newPassenger->next = p->next;
+        p->next = newPassenger;
+    }
+}
+
+void addWaitList(FlightInfo* flight, const char* name, int tickets) {
+    WaitListNode* newWait = (WaitListNode*)malloc(sizeof(WaitListNode));
+    strcpy(newWait->name, name);
+    newWait->requiredTickets = tickets;
+    newWait->next = NULL;
+
+    if (flight->waitListTail == NULL) {
+        flight->waitListHead = newWait;
+    }
+    else {
+        flight->waitListTail->next = newWait;
+    }
+    flight->waitListTail = newWait;
+}
 
 void bookTickets() {
     char flightNumber[20];
     int tickets;
-    printf("ÊäÈëº½°àºÅºÍ¶©Æ±ÊıÁ¿: ");
-    scanf_s("%s %d", flightNumber, &tickets);
+    char customerName[100];
+
+    printf("è¾“å…¥æ‚¨çš„å§“å: ");
+    scanf("%s", customerName);
+    printf("è¾“å…¥èˆªç­å·å’Œè®¢ç¥¨æ•°é‡: ");
+    scanf("%s", flightNumber);
+    scanf("%d", &tickets);
+
+    FlightInfo* targetFlight = NULL;
     for (int i = 0; i < flightCount; i++) {
         if (strcmp(flights[i].flightNumber, flightNumber) == 0) {
-            if (flights[i].remainingTickets >= tickets) {
-                flights[i].remainingTickets -= tickets;
-                printf("¶©Æ±³É¹¦£¡µ±Ç°ÓàÆ±Á¿: %d\n", flights[i].remainingTickets);
-                return;
-            }
-            else {
-                printf("ÓàÆ±²»×ã£¬ÎŞ·¨Íê³É¶©Æ±¡£\n");
-                return;
-            }
+            targetFlight = &flights[i];
+            break;
         }
     }
-    printf("Î´ÕÒµ½º½°àºÅÎª %s µÄº½°à¡£\n", flightNumber);
-}
- /*4. ´¦ÀíÍËÆ±
 
-´¦ÀíÍËÆ±ÒµÎñ£¬²¢²éÑ¯ÊÇ·ñÓĞµÈ´ıÃûµ¥ÖĞµÄ¿Í»§¿ÉÒÔ½ÓÊÕÕâĞ©Æ±¡£*/
+    if (targetFlight == NULL) {
+        printf("æœªæ‰¾åˆ°èˆªç­å·ä¸º %s çš„èˆªç­ã€‚\n", flightNumber);
+        return;
+    }
+
+    if (targetFlight->remainingTickets >= tickets) {
+        targetFlight->remainingTickets -= tickets;
+        addPassenger(targetFlight, customerName, tickets);//è¿›è¡Œé“¾è¡¨æ’å…¥
+        printf("è®¢ç¥¨æˆåŠŸï¼å½“å‰ä½™ç¥¨é‡: %d\n", targetFlight->remainingTickets);
+    }
+    else {
+        printf("ä½™ç¥¨ä¸è¶³ï¼Œæ— æ³•å®Œæˆè®¢ç¥¨ã€‚\n");
+
+        printf("æ˜¯å¦æŸ¥çœ‹å…¶ä»–åˆ°è¾¾åŒä¸€ç›®çš„åœ°çš„èˆªç­ï¼Ÿ(y/n): ");
+        char choice;
+        scanf(" %c", &choice);
+        if (choice == 'y' || choice == 'Y') {
+            int otherFlightsFound = 0;
+            for (int i = 0; i < flightCount; i++) {
+                if (strcmp(flights[i].destination, targetFlight->destination) == 0 && strcmp(flights[i].flightNumber, flightNumber) != 0) {
+                    printf("èˆªç­å·: %s, æœºå‹: %s, é£è¡Œæ—¥: ", flights[i].flightNumber, flights[i].planeNumber);
+                    for (int j = 0; j < 7; ++j) if (flights[i].flightDays[j]) printf("%d ", j + 1);
+                    printf(", ä½™ç¥¨é‡: %d\n", flights[i].remainingTickets);
+                    otherFlightsFound = 1;
+                }
+            }
+
+            if (otherFlightsFound) {
+                printf("æ˜¯å¦è®¢ç¥¨ï¼Ÿ(y/n): ");
+                scanf(" %c", &choice);
+                if (choice == 'y' || choice == 'Y') {
+                    printf("è¾“å…¥æ–°çš„èˆªç­å·å’Œè®¢ç¥¨æ•°é‡: ");
+                    char newFlightNumber[20];
+                    int newTickets;
+                    scanf("%s", newFlightNumber);
+                    scanf("%d", &newTickets);
+
+                    for (int i = 0; i < flightCount; i++) {
+                        if (strcmp(flights[i].flightNumber, newFlightNumber) == 0 && strcmp(flights[i].destination, targetFlight->destination) == 0) {
+                            if (flights[i].remainingTickets >= newTickets) {
+                                flights[i].remainingTickets -= newTickets;
+                                addPassenger(&flights[i], customerName, newTickets);
+                                printf("è®¢ç¥¨æˆåŠŸï¼å½“å‰ä½™ç¥¨é‡: %d\n", flights[i].remainingTickets);
+                                return;
+                            }
+                            else {
+                                printf("ä½™ç¥¨ä¸è¶³ï¼Œæ— æ³•å®Œæˆè®¢ç¥¨ã€‚\n");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        printf("æ‚¨éœ€è¦å€™è¡¥å—ï¼Ÿ(y/n): ");
+        scanf(" %c", &choice);
+        if (choice == 'y' || choice == 'Y') {
+            WaitListNode* newWait = (WaitListNode*)malloc(sizeof(WaitListNode));
+            strcpy(newWait->name, customerName);
+            newWait->requiredTickets = tickets;
+            newWait->next = NULL;
+            if (targetFlight->waitListTail) {
+                targetFlight->waitListTail->next = newWait;//æ³¨æ„ï¼šä½¿ç”¨äº†æ— å¤´ç»“ç‚¹çš„é˜Ÿåˆ—ï¼ï¼ˆæ–¹ä¾¿å†…éƒ¨æ“ä½œï¼Œä¸ç”¨å¤–è®¾enqueueï¼Œdequeueå‡½æ•°äº†ï¼‰
+            }
+            else {
+                targetFlight->waitListHead = newWait;
+            }
+            targetFlight->waitListTail = newWait;//æˆä¸ºæ–°çš„tailï¼ˆå…¥é˜Ÿåˆ—æ“ä½œï¼‰
+            printf("å·²åŠ å…¥å€™è¡¥åå•ã€‚\n");
+        }
+    }
+}
+
+
+
+
+void processWaitList(FlightInfo* flight) {
+    while (flight->waitListHead) {
+        WaitListNode* waitNode = flight->waitListHead;
+
+        if (flight->remainingTickets >= waitNode->requiredTickets) {
+            printf("å€™è¡¥ä¹˜å®¢ %s éœ€è¦ %d å¼ ç¥¨ï¼Œå½“å‰ä½™ç¥¨ %d å¼ ã€‚æ˜¯å¦ä¸ºè¯¥ä¹˜å®¢åŠç†è®¢ç¥¨ï¼Ÿ(y/n): ", waitNode->name, waitNode->requiredTickets, flight->remainingTickets);
+            char choice;
+            scanf(" %c", &choice);
+
+            if (choice == 'y' || choice == 'Y') {
+                flight->waitListHead = waitNode->next;
+                if (flight->waitListHead == NULL) {
+                    flight->waitListTail = NULL;
+                }
+                flight->remainingTickets -= waitNode->requiredTickets;
+                addPassenger(flight, waitNode->name, waitNode->requiredTickets);
+                printf("å·²ä¸ºå€™è¡¥ä¹˜å®¢ %s åŠç†è®¢ç¥¨ã€‚\n", waitNode->name);
+                free(waitNode);
+            }
+            else {
+                printf("è·³è¿‡å€™è¡¥ä¹˜å®¢ %sã€‚\n", waitNode->name);
+                flight->waitListHead = waitNode->next;
+                if (flight->waitListHead == NULL) {
+                    flight->waitListTail = NULL;
+                }
+                free(waitNode);
+            }
+        }
+        else {
+            break;
+        }
+    }
+}
+
+
 void cancelTickets() {
     char flightNumber[20];
+    char customerName[100];
     int tickets;
-    printf("ÊäÈëÍËÆ±µÄº½°àºÅºÍÊıÁ¿: ");
-    scanf_s("%s %d", flightNumber, &tickets);
+
+    printf("è¾“å…¥é€€ç¥¨çš„èˆªç­å·ã€ä¹˜å®¢å§“åå’Œæ•°é‡: ");
+    scanf("%s", flightNumber);
+    scanf("%s", customerName);
+    scanf("%d", &tickets);
+
     for (int i = 0; i < flightCount; i++) {
         if (strcmp(flights[i].flightNumber, flightNumber) == 0) {
-            flights[i].remainingTickets += tickets;
-            printf("ÍËÆ±³É¹¦£¡µ±Ç°ÓàÆ±Á¿: %d\n", flights[i].remainingTickets);
-            // ÕâÀï¿ÉÒÔÌí¼Ó´úÂëÀ´´¦ÀíµÈºòÃûµ¥
+            PassengerNode** p = &flights[i].passengerListHead;
+            while (*p) {
+                if (strcmp((*p)->name, customerName) == 0) {
+                    if ((*p)->ticketCount >= tickets) {
+                        (*p)->ticketCount -= tickets;
+                        flights[i].remainingTickets += tickets;
+                        printf("é€€ç¥¨æˆåŠŸï¼å½“å‰ä½™ç¥¨é‡: %d\n", flights[i].remainingTickets);
+
+                        // é€€ç¥¨å®Œå…¨å–æ¶ˆè¯¥ä¹˜å®¢çš„æ‰€æœ‰ç¥¨
+                        if ((*p)->ticketCount == 0) {
+                            PassengerNode* temp = *p;
+                            *p = (*p)->next;
+                            free(temp);
+                        }
+
+                        // å¤„ç†ç­‰å€™åå•
+                        processWaitList(&flights[i]);
+                        return;
+                    }
+                    else {
+                        printf("é€€ç¥¨æ•°é‡è¶…è¿‡è®¢ç¥¨æ•°é‡ï¼Œæ— æ³•å®Œæˆé€€ç¥¨ã€‚\n");
+                        return;
+                    }
+                }
+                p = &(*p)->next;
+            }
+            printf("æœªæ‰¾åˆ°ä¹˜å®¢ %s çš„è®¢ç¥¨ä¿¡æ¯ã€‚\n", customerName);
             return;
         }
     }
-    printf("Î´ÕÒµ½º½°àºÅÎª %s µÄº½°à¡£\n", flightNumber);
+    printf("æœªæ‰¾åˆ°èˆªç­å·ä¸º %s çš„èˆªç­ã€‚\n", flightNumber);
 }
-//1. ±£´æÊı¾İµ½ÎÄ¼ş
-//
-//Õâ¸öº¯Êı»á½«ËùÓĞº½°àĞÅÏ¢Ğ´Èëµ½Ò»¸öÎÄ±¾ÎÄ¼şÖĞ¡£ÎÒÃÇ¼ÙÉèÎÄ¼şµÄ¸ñÊ½ÊÇÃ¿ĞĞÒ»¸öº½°à£¬×Ö¶ÎÓÉ¶ººÅ·Ö¸ô¡£
 
 
 void saveFlightDataToFile() {
     FILE* file;
-   errno_t err = fopen_s(&file, "flights.txt", "w");
+    errno_t err = fopen_s(&file, "flights.txt", "w");
     if (file == NULL) {
-        printf("ÎŞ·¨´ò¿ªÎÄ¼ş½øĞĞĞ´Èë¡£\n");
+        printf("æ— æ³•æ‰“å¼€æ–‡ä»¶è¿›è¡Œå†™å…¥ã€‚\n");
         return;
     }
     for (int i = 0; i < flightCount; i++) {
-        fprintf(file, "%s,%s,%s,%d,%d,%d\n",
-            flights[i].destination,
-            flights[i].flightNumber,
-            flights[i].planeNumber,
-            flights[i].flightDay,
-            flights[i].seatQuota,
-            flights[i].remainingTickets);
+        fprintf(file, "èˆªçº¿:%s\n", flights[i].destination);
+        fprintf(file, "èˆªç­å·:%s\n", flights[i].flightNumber);
+        fprintf(file, "æœºå‹:%s\n", flights[i].planeNumber);
+        fprintf(file, "æ˜ŸæœŸå‡ :");
+        for (int j = 0; j < 7; ++j) if (flights[i].flightDays[j]) fprintf(file, "%d ", j + 1);
+        fprintf(file, "\n");
+        fprintf(file, "æœ€å¤§äººå‘˜:%d\n", flights[i].seatQuota);
+        fprintf(file, "ä½™ç¥¨é‡:%d\n", flights[i].remainingTickets);
+
+        PassengerNode* p = flights[i].passengerListHead;
+        int passengerCount = 0;
+        while (p) {
+            passengerCount++;
+            p = p->next;
+        }
+        fprintf(file, "å·²è®¢ç¥¨å®¢æˆ·:%d\n", passengerCount);
+
+        p = flights[i].passengerListHead;
+        while (p) {
+            fprintf(file, "å§“å:%s\n", p->name);
+            fprintf(file, "è®¢ç¥¨é‡:%d\n", p->ticketCount);
+            p = p->next;
+        }
+
+        WaitListNode* w = flights[i].waitListHead;
+        int waitListCount = 0;
+        while (w) {
+            waitListCount++;
+            w = w->next;
+        }
+        fprintf(file, "å€™è¡¥:%d\n", waitListCount);
+
+        w = flights[i].waitListHead;
+        while (w) {
+            fprintf(file, "å§“å:%s\n", w->name);
+            fprintf(file, "æ‰€éœ€ç¥¨é‡:%d\n", w->requiredTickets);
+            w = w->next;
+        }
     }
     fclose(file);
-    printf("º½°àÊı¾İÒÑ±£´æµ½ÎÄ¼ş¡£\n");
+    printf("èˆªç­æ•°æ®å·²ä¿å­˜åˆ°æ–‡ä»¶ã€‚\n");
 }
-
-// 2. ´ÓÎÄ¼ş¼ÓÔØÊı¾İ
-//
-//Õâ¸öº¯Êı»á´ÓÎÄ¼şÖĞ¶ÁÈ¡º½°àĞÅÏ¢£¬ÎÒÃÇ¼ÙÉèÎÄ¼şµÄ¸ñÊ½Óë±£´æÊ±ÏàÍ¬¡£
-
 
 void loadFlightDataFromFile() {
     FILE* file;
-        errno_t err= fopen_s(&file, "flights.txt", "r");
+    errno_t err = fopen_s(&file, "flights.txt", "r");
     if (file == NULL) {
-        printf("ÎŞ·¨´ò¿ªÎÄ¼ş½øĞĞ¶ÁÈ¡¡£\n");
+        printf("æ— æ³•æ‰“å¼€æ–‡ä»¶è¿›è¡Œè¯»å–ã€‚\n");
         return;
     }
-    while (fscanf_s(file, "%99[^,],%19[^,],%19[^,],%d,%d,%d\n",
-        flights[flightCount].destination,
-        flights[flightCount].flightNumber,
-        flights[flightCount].planeNumber,
-        &flights[flightCount].flightDay,
-        &flights[flightCount].seatQuota,
-        &flights[flightCount].remainingTickets) == 6) {
-        flights[flightCount].passengerListHead = NULL;
-        flights[flightCount].waitListHead = NULL;
-        flights[flightCount].waitListTail = NULL;
-        flightCount++;
-        if (flightCount >= MAX_FLIGHTS) break;
+
+    while (!feof(file) && flightCount < 999999) {
+        FlightInfo temp;
+        char line[256];
+        int passengerCount, waitListCount;
+
+        if (fscanf_s(file, "èˆªçº¿:%[^\n]\n", temp.destination, 100) == EOF) break;
+        if (fscanf_s(file, "èˆªç­å·:%[^\n]\n", temp.flightNumber, 20) == EOF) break;
+        if (fscanf_s(file, "æœºå‹:%[^\n]\n", temp.planeNumber, 20) == EOF) break;
+
+        if (fscanf_s(file, "æ˜ŸæœŸå‡ :%[^\n]\n", line, 256) == EOF) break;
+        for (int i = 0; i < 7; ++i) temp.flightDays[i] = 0;
+
+        for(int i=0;i<strlen(line);i++){
+        if(line[i]!=' '){
+            int cou=line[i]-'0';
+             if(cou>7||cou<1){
+                printf("é”™è¯¯çš„æ—¥æœŸè¾“å…¥ï¼");
+                exit(0);
+             }
+            temp.flightDays[cou]=1;
+        }
+    }
+
+        if (fscanf_s(file, "æœ€å¤§äººå‘˜:%d\n", &temp.seatQuota) == EOF) break;
+        if (fscanf_s(file, "ä½™ç¥¨é‡:%d\n", &temp.remainingTickets) == EOF) break;
+
+        if (fscanf_s(file, "å·²è®¢ç¥¨å®¢æˆ·:%d\n", &passengerCount) == EOF) break;
+        temp.passengerListHead = NULL;
+        PassengerNode** p = &temp.passengerListHead;
+        for (int i = 0; i < passengerCount; ++i) {
+            PassengerNode* newPassenger = (PassengerNode*)malloc(sizeof(PassengerNode));
+            if (fscanf_s(file, "å§“å:%[^\n]\n", newPassenger->name, 100) == EOF) break;
+            if (fscanf_s(file, "è®¢ç¥¨é‡:%d\n", &newPassenger->ticketCount) == EOF) break;
+            newPassenger->next = NULL;
+            *p = newPassenger;
+            p = &newPassenger->next;
+        }
+
+        if (fscanf_s(file, "å€™è¡¥:%d\n", &waitListCount) == EOF) break;
+        temp.waitListHead = NULL;
+        temp.waitListTail = NULL;
+        for (int i = 0; i < waitListCount; ++i) {
+            WaitListNode* newWait = (WaitListNode*)malloc(sizeof(WaitListNode));
+            if (fscanf_s(file, "å§“å:%[^\n]\n", newWait->name, 100) == EOF) break;
+            if (fscanf_s(file, "æ‰€éœ€ç¥¨é‡:%d\n", &newWait->requiredTickets) == EOF) break;
+            newWait->next = NULL;
+            if (temp.waitListTail) {
+                temp.waitListTail->next = newWait;
+            }
+            else {
+                temp.waitListHead = newWait;
+            }
+            temp.waitListTail = newWait;
+        }
+
+        flights[flightCount++] = temp;
     }
     fclose(file);
-    printf("º½°àÊı¾İÒÑ´ÓÎÄ¼ş¼ÓÔØ¡£\n");
+    printf("èˆªç­æ•°æ®å·²ä»æ–‡ä»¶åŠ è½½ã€‚\n");
 }
-
-
- /*3. ÕûºÏµ½Ö÷º¯Êı
-
-½«ÕâÁ½¸öº¯ÊıÕûºÏµ½Ö÷º¯ÊıÖĞ£¬ÒÔ±ãÔÚ³ÌĞòÆô¶¯Ê±¼ÓÔØÊı¾İ£¬²¢ÔÚ³ÌĞòÍË³öÇ°±£´æÊı¾İ¡£*/
-
 
 int main() {
     int choice;
-    loadFlightDataFromFile();  // ³ÌĞòÆô¶¯Ê±¼ÓÔØÊı¾İ
-
     do {
-        printf("\nº½¿Õ¿ÍÔË¶©Æ±ÏµÍ³\n");
-        printf("1. Â¼Èëº½°àĞÅÏ¢\n");
-        printf("2. ²éÑ¯º½Ïß\n");
-        printf("3. ¶©Æ±\n");
-        printf("4. ÍËÆ±\n");
-        printf("5. ±£´æº½°àÊı¾İµ½ÎÄ¼ş\n");
-        printf("6. ´ÓÎÄ¼ş¼ÓÔØº½°àÊı¾İ\n");
-        printf("0. ÍË³ö\n");
-        printf("Ñ¡Ôñ²Ù×÷: ");
-        scanf_s("%d", &choice);
+        printf("\nèˆªç©ºå®¢è¿è®¢ç¥¨ç³»ç»Ÿ\n");
+        printf("1. å½•å…¥èˆªç­ä¿¡æ¯\n");
+        printf("2. æŸ¥è¯¢èˆªçº¿\n");
+        printf("3. è®¢ç¥¨\n");
+        printf("4. é€€ç¥¨\n");
+        printf("5. ä¿å­˜èˆªç­æ•°æ®åˆ°æ–‡ä»¶\n");
+        printf("6. ä»æ–‡ä»¶åŠ è½½èˆªç­æ•°æ®\n");
+        printf("0. é€€å‡º\n");
+        printf("é€‰æ‹©æ“ä½œ: ");
+        scanf("%d", &choice);
 
         switch (choice) {
         case 1:
@@ -223,11 +452,11 @@ int main() {
             loadFlightDataFromFile();
             break;
         case 0:
-            saveFlightDataToFile();  // ÔÚÍË³öÇ°±£´æÊı¾İ
-            printf("ÍË³öÏµÍ³¡£\n");
+            saveFlightDataToFile();  // åœ¨é€€å‡ºå‰ä¿å­˜æ•°æ®
+            printf("é€€å‡ºç³»ç»Ÿã€‚\n");
             break;
         default:
-            printf("ÎŞĞ§ÊäÈë£¬ÇëÖØĞÂÑ¡Ôñ¡£\n");
+            printf("æ— æ•ˆè¾“å…¥ï¼Œè¯·é‡æ–°é€‰æ‹©ã€‚\n");
             break;
         }
     } while (choice != 0);

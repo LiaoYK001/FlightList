@@ -42,7 +42,7 @@
                 <label>
                     终点站：<input type="text" id="queryDestination">
                 </label>
-                <button onclick="queryFlight()">查询航线</button>
+                <button onclick="queryFlight()">🔎查询航线</button>
                 <div id="queryResult" class="result"></div>
             </div>
 
@@ -53,9 +53,12 @@
                     航班号：<input type="text" id="bookFlightNumber">
                 </label>
                 <label>
+                    姓名：<input type="text" id="customerName">
+                </label>
+                <label>
                     订票数额：<input type="number" id="bookTickets">
                 </label>
-                <button onclick="bookTickets()">承办订票</button>
+                <button onclick="bookTickets()">👜承办订票</button>
                 <div id="bookingResult" class="result"></div>
             </div>
 
@@ -65,9 +68,12 @@
                     航班号：<input type="text" id="cancelFlightNumber">
                 </label>
                 <label>
+                    姓名：<input type="text" id="customerName">
+                </label>
+                <label>
                     退票日期：<input type="date" id="cancelDate">
                 </label>
-                <button onclick="cancelTickets()">承办退票</button>
+                <button onclick="cancelTickets()">👜承办退票</button>
                 <div id="cancelResult" class="result"></div>
             </div>
 
@@ -443,7 +449,8 @@
         function bookTickets() {
              const flightNumber = document.getElementById('bookFlightNumber').value;
              const bookTickets = parseInt(document.getElementById('bookTickets').value);
-             const customerName = prompt('请输入客户姓名');
+             const customerName = parseInt(document.getElementById('customerName').value);
+             //const customerName = prompt('请输入客户姓名');
 
              let flight = flights.find(flight => flight.flightNumber === flightNumber);
 
@@ -466,7 +473,8 @@
         
         function cancelTickets() {
             const flightNumber = document.getElementById('cancelFlightNumber').value;
-            const customerName = prompt('请输入客户姓名');
+            const customerName = parseInt(document.getElementById('customerName').value);
+            //const customerName = prompt('请输入客户姓名');
 
             let flight = flights.find(flight => flight.flightNumber === flightNumber);
 
