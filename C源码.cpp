@@ -17,13 +17,13 @@ typedef struct FlightInfo {
     struct WaitListNode* waitListTail;       // 等候名单尾
 } FlightInfo;
 
-// 乘客
+// 乘客（链表节点）
 typedef struct PassengerNode {
     char name[100];
     int ticketCount;//一个person有多少票？比如老王要3张ticketCount==3；
     struct PassengerNode* next;
 } PassengerNode;
-
+//候补乘客（队列节点）
 typedef struct WaitListNode {
     char name[100];
     int requiredTickets;//一个person有多少票（候补）
