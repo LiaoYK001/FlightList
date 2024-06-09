@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 // 航线
 typedef struct FlightInfo {
@@ -44,24 +45,28 @@ void enterFlightInfo() {
     printf("输入飞行星期？ (用空格分隔, 例如 2 4 6): ");
     for (int i = 0; i < 7; ++i) f->flightDays[i] = 0;//初始假设7天都没有
     char days[20];
-    scanf("%s", days);//字符串类型
-    char* context = NULL;
-    for(int i=0;i<strlen(days);i++){
-        if(days[i]!=' '){
-            int cou=days[i]-'0';
-             if(cou>7||cou<1){
+    //fflush(stdin);
+    getchar();
+    gets_s(days,20);//字符串类型
+    for (int i = 0; i < strlen(days); i++) {
+        if (days[i] != ' ') {
+            int cou = days[i] - '0';
+            if (cou > 7 || cou < 1) {
                 printf("错误的日期输入！");
                 exit(0);
-             }
-            f->flightDays[cou]=1;
+            }
+            f->flightDays[cou] = 1;
         }
     }
-    
+
     printf("输入最大人数: ");
     scanf("%d", &f->seatQuota);
     printf("输入余票量: ");
     scanf("%d", &f->remainingTickets);
-
+    if (f->seatQuota < f->remainingTickets) {
+        printf("错误输入，余票大于最大人数！");
+        exit(0);
+    }
     f->passengerListHead = NULL;
     f->waitListHead = NULL;
     f->waitListTail = NULL;
@@ -132,7 +137,7 @@ void bookTickets() {
     printf("输入航班号和订票数量: ");
     scanf("%s", flightNumber);
     scanf("%d", &tickets);
-    if(tickets<1||tickets>999999){
+    if (tickets < 1 || tickets>999999) {
         printf("你想干什么？请输入正确的数字\n");
     }
     FlightInfo* targetFlight = NULL;
@@ -181,9 +186,9 @@ void bookTickets() {
                     scanf("%d", &newTickets);
 
                     for (int i = 0; i < flightCount; i++) {
-                        if (strcmp(flights[i].flightNumber, newFlightNumber) == 0 && strcmp(flights[i].destination, targetFlight->destination) == 0) {
+                        if (strcmp(flights[i].flightNumber, newFlightNumber) == 0 && strcmp(flights[i].destination, targetFlight->destination) == 0) { //航班号和目的地保证一致！！
                             if (flights[i].remainingTickets >= newTickets) {
-                                flights[i].remainingTickets -= newTickets;
+                                flights[i].remainingTickets -= newTickets;//定了票，要减少他定了好多
                                 addPassenger(&flights[i], customerName, newTickets);
                                 printf("订票成功！当前余票量: %d\n", flights[i].remainingTickets);
                                 return;
@@ -263,27 +268,27 @@ void cancelTickets() {
     scanf("%s", flightNumber);
     scanf("%s", customerName);
     scanf("%d", &tickets);
-    if(tickets<1||tickets>999999){
+    if (tickets < 1 || tickets>999999) {
         printf("你想干什么？请输入正确的数字\n");
     }
     for (int i = 0; i < flightCount; i++) {
         if (strcmp(flights[i].flightNumber, flightNumber) == 0) {
-            PassengerNode** p = &flights[i].passengerListHead;
-            while (*p) {
-                if (strcmp((*p)->name, customerName) == 0) {
-                    if ((*p)->ticketCount >= tickets) {
-                        (*p)->ticketCount -= tickets;
+            PassengerNode* p = flights[i].passengerListHead;
+            while (p) {
+                if (strcmp((p)->name, customerName) == 0) {
+                    if ((p)->ticketCount >= tickets) {
+                        (p)->ticketCount -= tickets;
                         flights[i].remainingTickets += tickets;
                         printf("退票成功！当前余票量: %d\n", flights[i].remainingTickets);
 
                         // 退票完全取消该乘客的所有票
-                        if ((*p)->ticketCount == 0) {
-                            PassengerNode* temp = *p;
-                            *p = (*p)->next;
-                            free(temp);
+                        if ((p)->ticketCount == 0) {
+                            PassengerNode* temp = p;
+                            p = (p)->next;
+                            //free(temp);不知道为什么有了这个free后，如果出现完全退票情况（上述代码执行）会出现指针问题
                         }
 
-                        // 处理等候名单
+                        // 处理候补名单
                         processWaitList(&flights[i]);
                         return;
                     }
@@ -292,7 +297,7 @@ void cancelTickets() {
                         return;
                     }
                 }
-                p = &(*p)->next;
+                p = p->next;
             }
             printf("未找到乘客 %s 的订票信息。\n", customerName);
             return;
@@ -323,15 +328,15 @@ void saveFlightDataToFile() {
         int passengerCount = 0;
         while (p) {
             passengerCount++;
-            p = p->next;
+            (p) = (p)->next;
         }
         fprintf(file, "已订票客户:%d\n", passengerCount);
 
-        p = flights[i].passengerListHead;
+        (p) = flights[i].passengerListHead;
         while (p) {
-            fprintf(file, "姓名:%s\n", p->name);
-            fprintf(file, "订票量:%d\n", p->ticketCount);
-            p = p->next;
+            fprintf(file, "姓名:%s\n", (p)->name);
+            fprintf(file, "订票量:%d\n", (p)->ticketCount);
+            (p) = (p)->next;
         }
 
         WaitListNode* w = flights[i].waitListHead;
@@ -368,25 +373,28 @@ void loadFlightDataFromFile() {
 
         if (fscanf_s(file, "航线:%[^\n]\n", temp.destination, 100) == EOF) break;
         if (fscanf_s(file, "航班号:%[^\n]\n", temp.flightNumber, 20) == EOF) break;
-        if (fscanf_s(file, "机型:%[^\n]\n", temp.planeNumber, 20) == EOF) break;
+        if (fscanf_s(file, "飞机号:%[^\n]\n", temp.planeNumber, 20) == EOF) break;
 
-        if (fscanf_s(file, "星期几:%[^\n]\n", line, 256) == EOF) break;
+        if (fscanf_s(file, "飞行周日:%[^\n]\n", line, 256) == EOF) break;
         for (int i = 0; i < 7; ++i) temp.flightDays[i] = 0;
 
-        for(int i=0;i<strlen(line);i++){
-        if(line[i]!=' '){
-            int cou=line[i]-'0';
-             if(cou>7||cou<1){
-                printf("错误的日期输入！");
-                exit(0);
-             }
-            temp.flightDays[cou]=1;
+        for (int i = 0; i < strlen(line); i++) {
+            if (line[i] != ' ') {
+                int cou = line[i] - '0';
+                if (cou > 7 || cou < 1) {
+                    printf("错误的日期输入！");
+                    exit(0);
+                }
+                temp.flightDays[cou] = 1;
+            }
         }
-    }
 
         if (fscanf_s(file, "最大人员:%d\n", &temp.seatQuota) == EOF) break;
         if (fscanf_s(file, "余票量:%d\n", &temp.remainingTickets) == EOF) break;
-
+        if (temp.seatQuota < temp.remainingTickets) {
+            printf("错误信息，余票大于最大人数！");
+            exit(0);
+        }
         if (fscanf_s(file, "已订票客户:%d\n", &passengerCount) == EOF) break;
         temp.passengerListHead = NULL;
         PassengerNode** p = &temp.passengerListHead;
